@@ -1,0 +1,170 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="AutoImportSettings">
+    <option name="autoReloadType" value="SELECTIVE" />
+  </component>
+  <component name="ChangeListManager">
+    <list default="true" id="42225867-d45f-4ddd-80b1-6e6a9e2b3bcd" name="Changes" comment="" />
+    <option name="SHOW_DIALOG" value="false" />
+    <option name="HIGHLIGHT_CONFLICTS" value="true" />
+    <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
+    <option name="LAST_RESOLUTION" value="IGNORE" />
+  </component>
+  <component name="FileTemplateManagerImpl">
+    <option name="RECENT_TEMPLATES">
+      <list>
+        <option value="JavaScript File" />
+      </list>
+    </option>
+  </component>
+  <component name="Git.Settings">
+    <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$" />
+  </component>
+  <component name="GitHubPullRequestSearchHistory">{
+  &quot;lastFilter&quot;: {
+    &quot;state&quot;: &quot;OPEN&quot;,
+    &quot;assignee&quot;: &quot;Pbhon&quot;
+  }
+}</component>
+  <component name="GithubPullRequestsUISettings">{
+  &quot;selectedUrlAndAccountId&quot;: {
+    &quot;url&quot;: &quot;https://github.com/Pbhon/khan_clone.git&quot;,
+    &quot;accountId&quot;: &quot;127ccc13-ff25-47de-857c-5446bf6a74c9&quot;
+  }
+}</component>
+  <component name="McpProjectServerCommands">
+    <commands />
+    <urls />
+  </component>
+  <component name="NextEditCompletionFeaturesState">
+    <decayedCancelled>
+      <entry key="MS100" value="1.000074108574487" />
+      <entry key="MS500" value="1.1492703983843238" />
+      <entry key="S2" value="1.6215748344519698" />
+      <entry key="S5" value="1.8267941006615769" />
+      <entry key="S10" value="1.9092823259041918" />
+      <entry key="S30" value="1.9796217133699945" />
+      <entry key="S60" value="2.279834233581332" />
+      <entry key="M2" value="4.620846697940538" />
+      <entry key="M5" value="21.651859267442777" />
+      <entry key="M10" value="52.92784634791249" />
+      <entry key="M15" value="76.73811591746761" />
+      <entry key="M30" value="119.09633121929689" />
+      <entry key="H1" value="154.75260721278644" />
+      <entry key="H2" value="179.13416891766508" />
+      <entry key="H4" value="193.6234545077188" />
+      <entry key="D1" value="207.12611951032713" />
+      <entry key="W1" value="209.58571684609956" />
+    </decayedCancelled>
+    <decayedSelected>
+      <entry key="MS100" value="0.0" />
+      <entry key="MS500" value="4.035613446679995E-295" />
+      <entry key="S2" value="2.5204459587867726E-74" />
+      <entry key="S5" value="3.6357244101583325E-30" />
+      <entry key="S10" value="1.906761168478984E-15" />
+      <entry key="S30" value="1.2579485748325605E-5" />
+      <entry key="S60" value="0.004074294175826245" />
+      <entry key="M2" value="0.09184965813253612" />
+      <entry key="M5" value="0.7172850310910992" />
+      <entry key="M10" value="1.549687087449137" />
+      <entry key="M15" value="2.063437231821258" />
+      <entry key="M30" value="2.820903090577751" />
+      <entry key="H1" value="3.3414710644618952" />
+      <entry key="H2" value="3.650805978477682" />
+      <entry key="H4" value="3.8200326862710194" />
+      <entry key="D1" value="3.969223855099233" />
+      <entry key="W1" value="3.995583780924713" />
+    </decayedSelected>
+    <decayedShown>
+      <entry key="MS100" value="1.477043997532706E-4" />
+      <entry key="MS500" value="0.22639805976386168" />
+      <entry key="S2" value="1.1279165525177757" />
+      <entry key="S5" value="1.5866809996442577" />
+      <entry key="S10" value="1.7806801031291608" />
+      <entry key="S30" value="1.9345267151220085" />
+      <entry key="S60" value="2.2586745410534" />
+      <entry key="M2" value="4.689921385529193" />
+      <entry key="M5" value="22.33471751547062" />
+      <entry key="M10" value="54.440381020496424" />
+      <entry key="M15" value="78.76746406506074" />
+      <entry key="M30" value="121.89273631765735" />
+      <entry key="H1" value="158.0791116046796" />
+      <entry key="H2" value="182.77665912518086" />
+      <entry key="H4" value="197.43909802361668" />
+      <entry key="D1" value="211.09457751933687" />
+      <entry key="W1" value="213.58119034969423" />
+    </decayedShown>
+  </component>
+  <component name="ProjectColorInfo">{
+  &quot;associatedIndex&quot;: 8,
+  &quot;fromUser&quot;: false
+}</component>
+  <component name="ProjectId" id="3HWVrA7f53SSRITuVa3nvxGTlzV" />
+  <component name="ProjectViewState">
+    <option name="hideEmptyMiddlePackages" value="true" />
+    <option name="showLibraryContents" value="true" />
+  </component>
+  <component name="PropertiesComponent"><![CDATA[{
+  "keyToString": {
+    "ModuleVcsDetector.initialDetectionPerformed": "true",
+    "RunOnceActivity.MCP Project settings loaded": "true",
+    "RunOnceActivity.ShowReadmeOnStart": "true",
+    "RunOnceActivity.git.unshallow": "true",
+    "RunOnceActivity.typescript.service.memoryLimit.init": "true",
+    "codeWithMe.voiceChat.enabledByDefault": "false",
+    "com.intellij.ml.llm.matterhorn.ej.ui.settings.DefaultModelSelectionForGA.v1": "true",
+    "git-widget-placeholder": "main",
+    "javascript.preferred.runtime.type.id": "node",
+    "junie.onboarding.icon.badge.shown": "true",
+    "last_opened_file_path": "C:/Users/Parthiv/khan_clone",
+    "node.js.detected.package.eslint": "true",
+    "node.js.detected.package.tslint": "true",
+    "node.js.selected.package.eslint": "(autodetect)",
+    "node.js.selected.package.tslint": "(autodetect)",
+    "nodejs_package_manager_path": "npm",
+    "npm.dev.executor": "Run",
+    "settings.editor.selected.configurable": "inlay.hints",
+    "to.speed.mode.migration.done": "true",
+    "ts.external.directory.path": "C:\\Users\\Parthiv\\AppData\\Local\\Programs\\WebStorm\\plugins\\javascript-plugin\\jsLanguageServicesImpl\\external"
+  }
+}]]></component>
+  <component name="RunManager">
+    <configuration name="dev" type="js.build_tools.npm" temporary="true" nameIsGenerated="true">
+      <package-json value="$PROJECT_DIR$/package.json" />
+      <command value="run" />
+      <scripts>
+        <script value="dev" />
+      </scripts>
+      <node-interpreter value="project" />
+      <envs />
+      <method v="2" />
+    </configuration>
+    <recent_temporary>
+      <list>
+        <item itemvalue="npm.dev" />
+      </list>
+    </recent_temporary>
+  </component>
+  <component name="SharedIndexes">
+    <attachedChunks>
+      <set>
+        <option value="bundled-js-predefined-d6986cc7102b-4abd2a77f808-JavaScript-WS-262.9437.145" />
+      </set>
+    </attachedChunks>
+  </component>
+  <component name="TaskManager">
+    <task active="true" id="Default" summary="Default task">
+      <changelist id="42225867-d45f-4ddd-80b1-6e6a9e2b3bcd" name="Changes" comment="" />
+      <created>1785984007565</created>
+      <option name="number" value="Default" />
+      <option name="presentableId" value="Default" />
+      <updated>1785984007565</updated>
+      <workItem from="1785984008566" duration="4578000" />
+      <workItem from="1786023572845" duration="1060000" />
+    </task>
+    <servers />
+  </component>
+  <component name="TypeScriptGeneratedFilesManager">
+    <option name="version" value="3" />
+  </component>
+</project>
