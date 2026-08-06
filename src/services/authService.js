@@ -1,6 +1,9 @@
 import { readCollection, writeCollection, DB_KEYS, initDb } from './localDb';
 import { generateId } from '../utils/idGenerator';
 import { ADMIN_SIGNUP_CODE } from '../config/adminAccess';
+import { createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut, onAuthStateChanged } from 'firebase/auth';
+import { doc, setDoc, getDoc } from 'firebase/firestore'
+import { auth, db } from "./firebaseConfig.js"
 
 /**
  * ============================================================================
@@ -25,49 +28,12 @@ import { ADMIN_SIGNUP_CODE } from '../config/adminAccess';
  * ============================================================================
  */
 
-initDb();
-
-let listeners = [];
-
-function notifyListeners(user) {
-  listeners.forEach((callback) => callback(user));
-}
-
-function getUsers() {
-  return readCollection(DB_KEYS.USERS) || [];
-}
-
-function saveUsers(users) {
-  writeCollection(DB_KEYS.USERS, users);
-}
-
-function stripPassword(user) {
-  if (!user) return null;
-  const { password, ...safeUser } = user;
-  return safeUser;
-}
-
-function setSession(user) {
-  writeCollection(DB_KEYS.SESSION, user);
-  notifyListeners(user);
-}
-
-/**
- * Registers a listener that's called immediately with the current user
- * (or null), and again every time auth state changes. Returns an unsubscribe
- * function — mirrors Firebase's onAuthStateChanged exactly so the swap later
- * is a one-line change in AuthContext.jsx.
- */
 export function subscribeToAuthChanges(callback) {
-  listeners.push(callback);
-  callback(readCollection(DB_KEYS.SESSION));
-  return () => {
-    listeners = listeners.filter((listener) => listener !== callback);
-  };
+  onAuthStateChanged(auth, callback);
 }
 
 export function getCurrentUser() {
-  return readCollection(DB_KEYS.SESSION);
+  return auth.currentUser;
 }
 
 /**
@@ -78,6 +44,7 @@ export function getCurrentUser() {
  * incorrect code throws rather than silently downgrading to student, so
  * the person trying gets clear feedback instead of a confusing account.
  */
+
 export async function signup({ name, email, password, role = 'student', adminCode = '' }) {
   if (!name?.trim() || !email?.trim() || !password) {
     throw new Error('Name, email, and password are all required.');
@@ -91,17 +58,10 @@ export async function signup({ name, email, password, role = 'student', adminCod
     finalRole = 'admin';
   }
 
-  const users = getUsers();
-  const emailTaken = users.some((u) => u.email.toLowerCase() === email.trim().toLowerCase());
-  if (emailTaken) {
-    throw new Error('An account with this email already exists.');
-  }
-
   const newUser = {
-    uid: generateId('user'),
+    uid: user.uid,
     name: name.trim(),
     email: email.trim().toLowerCase(),
-    password,
     role: finalRole,
     createdAt: new Date().toISOString(),
   };
