@@ -8,24 +8,27 @@
 // Passwords are plaintext here because this is a local mock, not a real
 // auth system. Firebase Auth (see README) handles hashing/security for you
 // once you wire it in — nothing here should be treated as production-safe.
-export const SEED_USERS = [
-  {
-    uid: 'user_admin_seed',
-    name: 'Alex (Admin)',
-    email: 'admin@example.com',
-    password: 'admin123',
-    role: 'admin',
-    createdAt: '2026-01-01T00:00:00.000Z',
-  },
-  {
-    uid: 'user_student_seed',
-    name: 'Sam (Student)',
-    email: 'student@example.com',
-    password: 'student123',
-    role: 'student',
-    createdAt: '2026-01-01T00:00:00.000Z',
-  },
-];
+//
+// MIGRATED TO FIREBASE AND FIRESTORE
+
+// export const SEED_USERS = [
+//   {
+//     uid: 'user_admin_seed',
+//     name: 'Alex (Admin)',
+//     email: 'admin@example.com',
+//     password: 'admin123',
+//     role: 'admin',
+//     createdAt: '2026-01-01T00:00:00.000Z',
+//   },
+//   {
+//     uid: 'user_student_seed',
+//     name: 'Sam (Student)',
+//     email: 'student@example.com',
+//     password: 'student123',
+//     role: 'student',
+//     createdAt: '2026-01-01T00:00:00.000Z',
+//   },
+// ];
 
 export const SEED_COURSES = [
   {

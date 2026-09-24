@@ -55,6 +55,34 @@ function setSession(user) {
   notifyListeners(user);
 }
 
+function mapFirebaseUser(firebaseUser, profile) {
+  return {
+    uid: firebaseUser.uid,
+    email: firebaseUser.email,
+    name: profile.name,
+    role: profile.role,
+  };
+}
+
+function friendlyAuthError(error) {
+  switch (error.code) {
+    case 'auth/email-already-in-use':
+      return "An accoutn with this email already exists.";
+    case 'auth/invalid-email':
+      return "That email address is invalid.";
+    case 'auth/weak-password':
+      return "Password should be at least 6 characters long.";
+    case 'auth/user-not-found':
+    case 'auth/wrong-password':
+    case 'auth/invalid-credential':
+      return 'Invalid email or password';
+    case 'auth/too-many-requests':
+      return 'Too many attempts - try again in a bit.';
+    default:
+      return error.message || "Something went wrong. Please try again";
+  }
+}
+
 /**
  * Registers a listener that's called immediately with the current user
  * (or null), and again every time auth state changes. Returns an unsubscribe
@@ -137,6 +165,7 @@ export async function logout() {
  */
 
 export async function getAllStudentCount() {
-  const snapshot = await getDocs(query(collection(db, 'users'), where('role', '==', 'student')));
+  const studentsQuery = query(collection(db, 'users'), where ("role", "==", "student"));
+  const snapshot = await getDocs(studentsQuery);
   return snapshot.size;
 }

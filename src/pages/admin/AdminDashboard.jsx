@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useData } from '../../context/DataContext';
 import { getAllStudentCount } from '../../services/authService';
@@ -9,10 +9,22 @@ export default function AdminDashboard() {
   const { courses, removeCourse, setCourseStatus } = useData();
   const navigate = useNavigate();
   const [confirmDeleteId, setConfirmDeleteId] = useState(null);
+  const [studentCount, setStudentCount] = useState(0);
 
   const publishedCount = courses.filter((c) => c.status === 'published').length;
   const draftCount = courses.length - publishedCount;
-  const studentCount = getAllStudentCount();
+
+  // getAllStudentCount is async under Firebase (it's a Firestore query) —
+  // was a synchronous array filter in the mock version.
+  useEffect(() => {
+    let cancelled = false;
+    getAllStudentCount().then((count) => {
+      if (!cancelled) setStudentCount(count);
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, []);
 
   function handleTogglePublish(course) {
     setCourseStatus(course.id, course.status === 'published' ? 'draft' : 'published');

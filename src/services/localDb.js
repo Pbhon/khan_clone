@@ -1,4 +1,4 @@
-import { SEED_USERS, SEED_COURSES, SEED_QUIZZES, SEED_AWARDS_CATALOG } from '../data/seedData';
+import { SEED_COURSES, SEED_QUIZZES, SEED_AWARDS_CATALOG } from '../data/seedData';
 
 /**
  * ============================================================================
@@ -8,28 +8,27 @@ import { SEED_USERS, SEED_COURSES, SEED_QUIZZES, SEED_AWARDS_CATALOG } from '../
  * app is fully functional the moment you run it — no server required yet.
  *
  * WHEN YOU'RE READY FOR FIREBASE:
- * Every other service file (authService, courseService, quizService,
- * progressService, awardsService) only talks to the database through the
+ * authService.js has already been migrated off this file — see
+ * src/services/firebaseConfig.js and the "Connecting Firebase" section of
+ * README.md. The remaining services (courseService, quizService,
+ * progressService, awardsService) still talk to the database through the
  * four functions exported here: readCollection, writeCollection, initDb,
- * and DB_KEYS. You don't need to rewrite this file directly — instead, go
- * into each service file and replace its calls to readCollection/
- * writeCollection with the matching Firestore calls (getDocs/setDoc/
- * updateDoc/deleteDoc). The function SIGNATURES in those files
- * (e.g. `getCourseById(id)`, `enrollInCourse(userId, courseId)`) are
- * intentionally identical to what you'd want from a Firestore-backed
+ * and DB_KEYS. Migrate each one the same way authService was: replace its
+ * calls to readCollection/writeCollection with the matching Firestore
+ * calls (getDocs/setDoc/updateDoc/deleteDoc). The function SIGNATURES in
+ * those files (e.g. `getCourseById(id)`, `enrollInCourse(userId, courseId)`)
+ * are intentionally identical to what you'd want from a Firestore-backed
  * version, so nothing in your components (pages/, context/) needs to
- * change at all. See README.md for a worked example.
+ * change at all.
  * ============================================================================
  */
 
 export const DB_KEYS = {
-  USERS: 'learnhub_users',
   COURSES: 'learnhub_courses',
   QUIZZES: 'learnhub_quizzes',
   PROGRESS: 'learnhub_progress',
   AWARDS_CATALOG: 'learnhub_awardsCatalog',
   USER_AWARDS: 'learnhub_userAwards',
-  SESSION: 'learnhub_session',
 };
 
 export function readCollection(key) {
@@ -60,9 +59,6 @@ export function writeCollection(key, data) {
 export function initDb() {
   if (typeof window === 'undefined') return;
 
-  if (readCollection(DB_KEYS.USERS) === null) {
-    writeCollection(DB_KEYS.USERS, SEED_USERS);
-  }
   if (readCollection(DB_KEYS.COURSES) === null) {
     writeCollection(DB_KEYS.COURSES, SEED_COURSES);
   }

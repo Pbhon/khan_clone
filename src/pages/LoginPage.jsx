@@ -75,8 +75,8 @@ export default function LoginPage() {
         </p>
 
         <div className="auth-demo-hint">
-          <strong>Trying this locally?</strong> Demo accounts: <code>admin@example.com</code> /{' '}
-          <code>admin123</code> (admin) and <code>student@example.com</code> / <code>student123</code> (student).
+          <strong>New here?</strong>
+          Create an account on the Sign up page - as an admin if you know the access code, otherwise as a student.
         </div>
       </div>
     </div>
