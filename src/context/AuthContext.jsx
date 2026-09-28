@@ -19,12 +19,14 @@ export function AuthProvider({ children }) {
   async function login(email, password) {
     const user = await authService.login({ email, password });
     setCurrentUser(user);
+    setAuthError('');
     return user;
   }
 
   async function signup(name, email, password) {
     const user = await authService.signup({ name, email, password });
     setCurrentUser(user);
+    setAuthError('');
     return user;
   }
 

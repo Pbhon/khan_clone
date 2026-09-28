@@ -22,7 +22,7 @@ The repository includes the current Firebase web configuration as a fallback. To
 
 ## Firebase setup
 
-1. Open the Firebase project and enable **Authentication > Sign-in method > Email/Password**.
+1. Deploy the checked-in email/password Authentication configuration with `firebase deploy --only auth`.
 2. Create the Firestore database and ensure the Cloud Firestore API is enabled.
 3. Deploy the checked-in security rules:
 

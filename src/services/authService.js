@@ -20,6 +20,10 @@ import {
 } from 'firebase/firestore';
 import { auth, db } from './firebaseConfig';
 
+// Firebase emits the new session before signup has finished writing its profile.
+// Wait for that write before the auth listener tries to load the user.
+let signupProvisioning = null;
+
 function mapFirebaseUser(firebaseUser, profile) {
   return {
     uid: firebaseUser.uid,
@@ -43,6 +47,16 @@ function friendlyAuthError(error) {
       return 'Invalid email or password.';
     case 'auth/too-many-requests':
       return 'Too many attempts. Please wait a moment and try again.';
+    case 'auth/configuration-not-found':
+      return 'Authentication is not configured for this Firebase project. Ask the site administrator to enable email/password sign-in.';
+    case 'auth/operation-not-allowed':
+      return 'Email/password sign-in is disabled for this Firebase project.';
+    case 'auth/network-request-failed':
+      return 'Could not reach Firebase. Check your connection and try again.';
+    case 'auth/user-disabled':
+      return 'This account has been disabled. Ask the site administrator for help.';
+    case 'auth/invalid-api-key':
+      return 'The site has an invalid Firebase API key. Ask the site administrator for help.';
     case 'permission-denied':
     case 'firestore/permission-denied':
       return 'Firebase rejected this request. Check the Firestore API and security rules.';
@@ -64,10 +78,14 @@ export function subscribeToAuthChanges(callback) {
     }
 
     try {
-      callback(await loadProfile(firebaseUser));
+      if (signupProvisioning) await signupProvisioning;
+      const user = await loadProfile(firebaseUser);
+      if (auth.currentUser?.uid === firebaseUser.uid) {
+        callback(user, user ? '' : 'This account is missing its LearnHub profile. Ask an administrator for help.');
+      }
     } catch (error) {
       console.error('[LearnHub] Could not load the signed-in user profile.', error);
-      callback(null, friendlyAuthError(error));
+      if (auth.currentUser?.uid === firebaseUser.uid) callback(null, friendlyAuthError(error));
     }
   });
 }
@@ -106,6 +124,11 @@ export async function signup({ name, email, password }) {
 
   let credential;
   let profileCreated = false;
+  let finishProvisioning;
+  const provisioning = new Promise((resolve) => {
+    finishProvisioning = resolve;
+  });
+  signupProvisioning = provisioning;
   try {
     credential = await createUserWithEmailAndPassword(auth, email.trim().toLowerCase(), password);
     await updateProfile(credential.user, { displayName: name.trim() });
@@ -124,12 +147,19 @@ export async function signup({ name, email, password }) {
     if (credential?.user) {
       try {
         if (profileCreated) await deleteDoc(doc(db, 'users', credential.user.uid));
+      } catch (rollbackError) {
+        console.error('[LearnHub] Could not remove an incomplete signup profile.', rollbackError);
+      }
+      try {
         await deleteUser(credential.user);
       } catch (rollbackError) {
-        console.error('[LearnHub] Could not roll back an incomplete signup.', rollbackError);
+        console.error('[LearnHub] Could not remove an incomplete Firebase account.', rollbackError);
       }
     }
     throw new Error(friendlyAuthError(error));
+  } finally {
+    finishProvisioning();
+    if (signupProvisioning === provisioning) signupProvisioning = null;
   }
 }
 
@@ -137,12 +167,18 @@ export async function login({ email, password }) {
   if (!email?.trim() || !password) throw new Error('Email and password are required.');
   try {
     const credential = await signInWithEmailAndPassword(auth, email.trim().toLowerCase(), password);
-    const user = await loadProfile(credential.user);
-    if (!user) {
-      await signOut(auth);
-      throw new Error('This account is missing its LearnHub profile. Ask an administrator for help.');
+    try {
+      const user = await loadProfile(credential.user);
+      if (!user) throw new Error('This account is missing its LearnHub profile. Ask an administrator for help.');
+      return user;
+    } catch (profileError) {
+      try {
+        await signOut(auth);
+      } catch (signOutError) {
+        console.error('[LearnHub] Could not clear a session without a profile.', signOutError);
+      }
+      throw profileError;
     }
-    return user;
   } catch (error) {
     if (error.message?.startsWith('This account is missing')) throw error;
     throw new Error(friendlyAuthError(error));
