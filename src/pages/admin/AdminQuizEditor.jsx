@@ -3,28 +3,34 @@ import { useNavigate, useParams } from 'react-router-dom';
 import { useData } from '../../context/DataContext';
 import ConfirmDialog from '../../components/ConfirmDialog';
 import { createQuestionTemplate } from '../../data/templates';
-import * as quizService from '../../services/quizService';
 
 export default function AdminQuizEditor() {
   const { quizId } = useParams();
   const navigate = useNavigate();
-  const { saveQuiz, removeQuiz } = useData();
+  const { getQuizById, saveQuiz, removeQuiz } = useData();
 
   const [quiz, setQuiz] = useState(null);
   const [notice, setNotice] = useState('');
   const [editingQuestionId, setEditingQuestionId] = useState(null);
   const [confirmDeleteQuestionId, setConfirmDeleteQuestionId] = useState(null);
   const [confirmDeleteQuiz, setConfirmDeleteQuiz] = useState(false);
+  const [saving, setSaving] = useState(false);
 
   useEffect(() => {
-    const existing = quizService.getQuizById(quizId);
-    if (existing) {
-      setQuiz(existing);
-    } else {
-      navigate('/admin', { replace: true });
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [quizId]);
+    let cancelled = false;
+    getQuizById(quizId)
+      .then((existing) => {
+        if (cancelled) return;
+        if (existing) setQuiz(existing);
+        else navigate('/admin', { replace: true });
+      })
+      .catch((error) => {
+        if (!cancelled) setNotice(error.message || 'Could not load this quiz.');
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [getQuizById, navigate, quizId]);
 
   if (!quiz) {
     return (
@@ -87,21 +93,35 @@ export default function AdminQuizEditor() {
     return null;
   }
 
-  function handleSave() {
+  async function handleSave() {
     const error = validate();
     if (error) {
       setNotice(error);
       window.scrollTo({ top: 0, behavior: 'smooth' });
       return;
     }
-    const saved = saveQuiz(quiz);
-    setQuiz(saved);
-    setNotice('Quiz saved.');
+    setSaving(true);
+    try {
+      const saved = await saveQuiz(quiz);
+      setQuiz(saved);
+      setNotice('Quiz saved.');
+    } catch (error) {
+      setNotice(error.message || 'Could not save the quiz.');
+    } finally {
+      setSaving(false);
+    }
   }
 
-  function handleDeleteQuiz() {
-    removeQuiz(quiz.id);
-    navigate(backLink);
+  async function handleDeleteQuiz() {
+    setSaving(true);
+    try {
+      await removeQuiz(quiz.id);
+      navigate(backLink);
+    } catch (error) {
+      setConfirmDeleteQuiz(false);
+      setNotice(error.message || 'Could not delete the quiz.');
+      setSaving(false);
+    }
   }
 
   const bankWarning = quiz.questionsPerAttempt > quiz.questions.length;
@@ -219,8 +239,8 @@ export default function AdminQuizEditor() {
           <button type="button" className="btn btn-ghost" onClick={() => navigate(backLink)}>
             Cancel
           </button>
-          <button type="button" className="btn btn-primary" onClick={handleSave}>
-            Save Quiz
+          <button type="button" className="btn btn-primary" onClick={handleSave} disabled={saving}>
+            {saving ? 'Saving…' : 'Save Quiz'}
           </button>
         </div>
       </div>

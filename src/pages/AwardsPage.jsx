@@ -2,7 +2,7 @@ import { useData } from '../context/DataContext';
 import AwardBadge from '../components/AwardBadge';
 
 export default function AwardsPage() {
-  const { awardsCatalog, userAwards } = useData();
+  const { awardsCatalog, userAwards, dataLoading, dataError } = useData();
   const earnedMap = new Map(userAwards.map((ua) => [ua.awardId, ua.earnedAt]));
 
   return (
@@ -16,7 +16,9 @@ export default function AwardsPage() {
         </div>
       </div>
 
-      <div className="award-grid">
+      {dataError && <div className="alert alert-error">{dataError}</div>}
+
+      {dataLoading ? <div className="empty-state"><p>Loading awards…</p></div> : <div className="award-grid">
         {awardsCatalog.map((award) => (
           <AwardBadge
             key={award.id}
@@ -25,7 +27,7 @@ export default function AwardsPage() {
             earnedAt={earnedMap.get(award.id)}
           />
         ))}
-      </div>
+      </div>}
     </div>
   );
 }

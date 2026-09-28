@@ -1,92 +1,77 @@
-import { readCollection, writeCollection, DB_KEYS, initDb } from './localDb';
-import { generateId } from '../utils/idGenerator';
+import {
+  addDoc,
+  collection,
+  doc,
+  getDoc,
+  getDocs,
+  query,
+  updateDoc,
+  where,
+  writeBatch,
+} from 'firebase/firestore';
+import { db } from './firebaseConfig';
+import { SEED_COURSES, SEED_QUIZZES } from '../data/seedData';
 
-/**
- * Course CRUD. A course carries its units and lessons nested inside it as
- * arrays (see data/templates.js for the shape) — the admin editor reads and
- * writes the whole course object in one piece.
- *
- * Firestore swap: this collection maps naturally to a `courses` collection,
- * one document per course, with `units` staying as a nested array field
- * (Firestore supports arrays of objects directly — no subcollection needed
- * unless a single course ends up with hundreds of lessons).
- */
+const courseCollection = collection(db, 'courses');
 
-initDb();
-
-function getCourses() {
-  return readCollection(DB_KEYS.COURSES) || [];
+function fromSnapshot(snapshot) {
+  return { id: snapshot.id, ...snapshot.data() };
 }
 
-function saveCourses(courses) {
-  writeCollection(DB_KEYS.COURSES, courses);
+export async function getAllCourses({ includeDrafts = false } = {}) {
+  const source = includeDrafts
+    ? courseCollection
+    : query(courseCollection, where('status', '==', 'published'));
+  const snapshot = await getDocs(source);
+  return snapshot.docs.map(fromSnapshot).sort((a, b) => a.title.localeCompare(b.title));
 }
 
-/** All courses, draft and published — for the admin dashboard. */
-export function getAllCourses() {
-  return getCourses();
+export async function getCourseById(courseId) {
+  const snapshot = await getDoc(doc(db, 'courses', courseId));
+  return snapshot.exists() ? fromSnapshot(snapshot) : null;
 }
 
-/** Only published courses — for the student-facing catalog. */
-export function getPublishedCourses() {
-  return getCourses().filter((c) => c.status === 'published');
-}
-
-export function getCourseById(courseId) {
-  return getCourses().find((c) => c.id === courseId) || null;
-}
-
-export function createCourse(courseData) {
-  const courses = getCourses();
+export async function createCourse(courseData) {
   const now = new Date().toISOString();
-  const newCourse = {
-    ...courseData,
-    id: generateId('course'),
-    createdAt: now,
-    updatedAt: now,
-  };
-  saveCourses([...courses, newCourse]);
-  return newCourse;
+  const { id: ignoredId, ...data } = courseData;
+  const reference = await addDoc(courseCollection, { ...data, createdAt: now, updatedAt: now });
+  return { ...data, id: reference.id, createdAt: now, updatedAt: now };
 }
 
-export function updateCourse(courseId, updates) {
-  const courses = getCourses();
-  const index = courses.findIndex((c) => c.id === courseId);
-  if (index === -1) throw new Error(`No course found with id ${courseId}`);
-  const updated = { ...courses[index], ...updates, id: courseId, updatedAt: new Date().toISOString() };
-  courses[index] = updated;
-  saveCourses(courses);
-  return updated;
+export async function updateCourse(courseId, updates) {
+  const { id: ignoredId, createdAt, ...data } = updates;
+  const updated = { ...data, ...(createdAt ? { createdAt } : {}), updatedAt: new Date().toISOString() };
+  await updateDoc(doc(db, 'courses', courseId), updated);
+  return { ...updates, ...updated, id: courseId };
 }
 
 export function setCourseStatus(courseId, status) {
   return updateCourse(courseId, { status });
 }
 
-/**
- * Deletes a course and cascades: removes any quizzes attached to its
- * lessons and any student progress records for it, so nothing orphaned is
- * left behind in the other collections.
- */
-export function deleteCourse(courseId) {
-  const course = getCourseById(courseId);
+export async function deleteCourse(courseId) {
+  const course = await getCourseById(courseId);
   if (!course) return;
 
-  const quizIds = course.units.flatMap((u) => u.lessons.map((l) => l.quizId).filter(Boolean));
+  const batch = writeBatch(db);
+  batch.delete(doc(db, 'courses', courseId));
 
-  saveCourses(getCourses().filter((c) => c.id !== courseId));
-
-  if (quizIds.length > 0) {
-    const quizzes = readCollection(DB_KEYS.QUIZZES) || [];
-    writeCollection(
-      DB_KEYS.QUIZZES,
-      quizzes.filter((q) => !quizIds.includes(q.id))
-    );
-  }
-
-  const progress = readCollection(DB_KEYS.PROGRESS) || [];
-  writeCollection(
-    DB_KEYS.PROGRESS,
-    progress.filter((p) => p.courseId !== courseId)
+  const quizIds = (course.units || []).flatMap((unit) =>
+    (unit.lessons || []).map((lesson) => lesson.quizId).filter(Boolean)
   );
+  quizIds.forEach((quizId) => batch.delete(doc(db, 'quizzes', quizId)));
+
+  const progressSnapshot = await getDocs(query(collection(db, 'progress'), where('courseId', '==', courseId)));
+  progressSnapshot.forEach((progressDoc) => batch.delete(progressDoc.ref));
+  await batch.commit();
+}
+
+export async function seedStarterContent() {
+  const existing = await getDocs(courseCollection);
+  if (!existing.empty) throw new Error('Starter content can only be added when there are no courses.');
+
+  const batch = writeBatch(db);
+  SEED_COURSES.forEach(({ id, ...course }) => batch.set(doc(db, 'courses', id), course));
+  SEED_QUIZZES.forEach(({ id, ...quiz }) => batch.set(doc(db, 'quizzes', id), quiz));
+  await batch.commit();
 }

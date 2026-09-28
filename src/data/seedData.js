@@ -1,7 +1,7 @@
 /**
  * Starter content so the app is usable the moment you run `npm run dev`,
  * instead of opening to a completely empty dashboard. All of this lives in
- * localStorage once seeded — edit or delete any of it from the admin UI,
+ * Firestore once an admin chooses "Add Starter Courses" — edit or delete it from the admin UI,
  * or just clear your browser storage to reset back to this.
  */
 

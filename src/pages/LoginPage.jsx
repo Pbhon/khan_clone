@@ -3,7 +3,7 @@ import { Link, Navigate, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 
 export default function LoginPage() {
-  const { currentUser, isAdmin, login } = useAuth();
+  const { currentUser, isAdmin, login, authError } = useAuth();
   const navigate = useNavigate();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -34,7 +34,7 @@ export default function LoginPage() {
         <h1 className="page-title">Log in</h1>
         <p className="text-muted">Welcome back — pick up where you left off.</p>
 
-        {error && <div className="alert alert-error">{error}</div>}
+        {(error || authError) && <div className="alert alert-error">{error || authError}</div>}
 
         <form onSubmit={handleSubmit}>
           <div className="form-group">
@@ -75,8 +75,7 @@ export default function LoginPage() {
         </p>
 
         <div className="auth-demo-hint">
-          <strong>New here?</strong>
-          Create an account on the Sign up page - as an admin if you know the access code, otherwise as a student.
+          <strong>Administrators:</strong> admin access is assigned securely in Firebase and is not available through public signup.
         </div>
       </div>
     </div>

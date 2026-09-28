@@ -5,7 +5,7 @@ import CourseCard from '../components/CourseCard';
 import { findNextIncompleteLesson } from '../utils/progressUtils';
 
 export default function CourseCatalog() {
-  const { publishedCourses, progress, enroll } = useData();
+  const { publishedCourses, progress, enroll, dataLoading, dataError } = useData();
   const navigate = useNavigate();
   const [search, setSearch] = useState('');
   const [subjectFilter, setSubjectFilter] = useState('All');
@@ -32,8 +32,8 @@ export default function CourseCatalog() {
     return nextLesson ? `/courses/${course.id}/lessons/${nextLesson.id}` : `/courses/${course.id}`;
   }
 
-  function handleEnroll(courseId) {
-    enroll(courseId);
+  async function handleEnroll(courseId) {
+    await enroll(courseId);
     navigate(`/courses/${courseId}`);
   }
 
@@ -48,15 +48,18 @@ export default function CourseCatalog() {
         </div>
       </div>
 
+      {dataError && <div className="alert alert-error">{dataError}</div>}
+
       <div className="catalog-filters">
         <input
           type="text"
           className="form-input"
+          aria-label="Search courses"
           placeholder="Search courses…"
           value={search}
           onChange={(e) => setSearch(e.target.value)}
         />
-        <select className="form-select" value={subjectFilter} onChange={(e) => setSubjectFilter(e.target.value)}>
+        <select aria-label="Filter by subject" className="form-select" value={subjectFilter} onChange={(e) => setSubjectFilter(e.target.value)}>
           {subjects.map((subject) => (
             <option key={subject} value={subject}>
               {subject}
@@ -65,7 +68,9 @@ export default function CourseCatalog() {
         </select>
       </div>
 
-      {filtered.length === 0 ? (
+      {dataLoading ? (
+        <div className="empty-state"><p>Loading courses…</p></div>
+      ) : filtered.length === 0 ? (
         <div className="empty-state">
           <h3>No courses match your search</h3>
           <p>Try a different keyword or subject.</p>

@@ -4,9 +4,10 @@ import { getAllLessons } from '../utils/progressUtils';
 
 export default function LessonView() {
   const { courseId, lessonId } = useParams();
-  const { courses, getCourseProgress, completeLesson } = useData();
+  const { courses, dataLoading, getCourseProgress, completeLesson } = useData();
   const course = courses.find((c) => c.id === courseId);
 
+  if (dataLoading) return <div className="page container-narrow"><p className="text-muted">Loading lesson…</p></div>;
   if (!course) return <Navigate to="/courses" replace />;
 
   const allLessons = getAllLessons(course);
@@ -19,6 +20,10 @@ export default function LessonView() {
   if (!progress) return <Navigate to={`/courses/${courseId}`} replace />;
 
   const isComplete = Boolean(progress.lessonCompletion[lesson.id]);
+
+  async function handleComplete() {
+    await completeLesson(courseId, lesson.id);
+  }
   const prevLesson = allLessons[lessonIndex - 1];
   const nextLesson = allLessons[lessonIndex + 1];
   const attempts = (lesson.quizId && progress.quizAttempts[lesson.quizId]) || [];
@@ -59,7 +64,7 @@ export default function LessonView() {
           <button
             type="button"
             className="btn btn-primary btn-block"
-            onClick={() => completeLesson(courseId, lesson.id)}
+            onClick={handleComplete}
             disabled={isComplete}
           >
             {isComplete ? 'Completed ✓' : 'Mark as Complete'}

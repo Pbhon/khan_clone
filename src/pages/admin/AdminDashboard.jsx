@@ -6,10 +6,11 @@ import ConfirmDialog from '../../components/ConfirmDialog';
 import { getTotalLessonsCount } from '../../utils/progressUtils';
 
 export default function AdminDashboard() {
-  const { courses, removeCourse, setCourseStatus } = useData();
+  const { courses, dataLoading, dataError, removeCourse, seedStarterContent, setCourseStatus } = useData();
   const navigate = useNavigate();
   const [confirmDeleteId, setConfirmDeleteId] = useState(null);
   const [studentCount, setStudentCount] = useState(0);
+  const [seeding, setSeeding] = useState(false);
 
   const publishedCount = courses.filter((c) => c.status === 'published').length;
   const draftCount = courses.length - publishedCount;
@@ -18,21 +19,34 @@ export default function AdminDashboard() {
   // was a synchronous array filter in the mock version.
   useEffect(() => {
     let cancelled = false;
-    getAllStudentCount().then((count) => {
-      if (!cancelled) setStudentCount(count);
-    });
+    getAllStudentCount()
+      .then((count) => {
+        if (!cancelled) setStudentCount(count);
+      })
+      .catch(() => {
+        if (!cancelled) setStudentCount(null);
+      });
     return () => {
       cancelled = true;
     };
   }, []);
 
-  function handleTogglePublish(course) {
-    setCourseStatus(course.id, course.status === 'published' ? 'draft' : 'published');
+  async function handleTogglePublish(course) {
+    await setCourseStatus(course.id, course.status === 'published' ? 'draft' : 'published');
   }
 
-  function handleDeleteConfirmed() {
-    removeCourse(confirmDeleteId);
+  async function handleDeleteConfirmed() {
+    await removeCourse(confirmDeleteId);
     setConfirmDeleteId(null);
+  }
+
+  async function handleSeedStarterContent() {
+    setSeeding(true);
+    try {
+      await seedStarterContent();
+    } finally {
+      setSeeding(false);
+    }
   }
 
   return (
@@ -61,21 +75,30 @@ export default function AdminDashboard() {
           <div className="stat-label">Draft</div>
         </div>
         <div className="stat-card">
-          <div className="stat-value">{studentCount}</div>
+          <div className="stat-value">{studentCount ?? '—'}</div>
           <div className="stat-label">Students</div>
         </div>
       </div>
 
-      {courses.length === 0 ? (
+      {dataError && <div className="alert alert-error">{dataError}</div>}
+
+      {dataLoading ? (
+        <div className="empty-state"><p>Loading courses…</p></div>
+      ) : courses.length === 0 ? (
         <div className="empty-state">
           <h3>No courses yet</h3>
           <p>Create your first course to get started.</p>
-          <button type="button" className="btn btn-primary" onClick={() => navigate('/admin/courses/new')}>
-            + Create New Course
-          </button>
+          <div className="empty-state-actions">
+            <button type="button" className="btn btn-primary" onClick={() => navigate('/admin/courses/new')}>
+              + Create New Course
+            </button>
+            <button type="button" className="btn btn-outline" onClick={handleSeedStarterContent} disabled={seeding}>
+              {seeding ? 'Adding…' : 'Add Starter Courses'}
+            </button>
+          </div>
         </div>
       ) : (
-        <table className="admin-table">
+        <div className="table-scroll"><table className="admin-table">
           <thead>
             <tr>
               <th>Title</th>
@@ -125,7 +148,7 @@ export default function AdminDashboard() {
               </tr>
             ))}
           </tbody>
-        </table>
+        </table></div>
       )}
 
       <ConfirmDialog

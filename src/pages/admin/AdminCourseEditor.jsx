@@ -10,27 +10,26 @@ const SUBJECTS = ['Math', 'Science', 'Computer Science', 'History', 'Language Ar
 export default function AdminCourseEditor() {
   const { courseId } = useParams();
   const navigate = useNavigate();
-  const { courses, saveCourse, saveQuiz, removeCourse } = useData();
+  const { courses, dataLoading, saveCourse, saveQuiz, removeCourse } = useData();
   const isEditMode = Boolean(courseId);
 
   const [course, setCourse] = useState(null);
   const [notice, setNotice] = useState('');
   const [confirmDelete, setConfirmDelete] = useState(false);
+  const [saving, setSaving] = useState(false);
 
   useEffect(() => {
     if (!isEditMode) {
-      setCourse(createCourseTemplate());
+      setCourse((current) => current ?? createCourseTemplate());
       return;
     }
     const existing = courses.find((c) => c.id === courseId);
     if (existing) {
       setCourse((prev) => prev ?? existing); // don't clobber in-progress edits on unrelated re-renders
-    } else if (courses.length > 0) {
-      // Data has loaded and this id genuinely doesn't exist — bail out.
+    } else if (!dataLoading) {
       navigate('/admin', { replace: true });
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [courseId, courses]);
+  }, [courseId, courses, dataLoading, isEditMode, navigate]);
 
   if (!course) {
     return (
@@ -66,7 +65,7 @@ export default function AdminCourseEditor() {
     };
   }
 
-  function handleManageQuiz(lesson) {
+  async function handleManageQuiz(lesson) {
     if (!course.id) {
       setNotice('Save the course first — then you can add a quiz to any lesson.');
       window.scrollTo({ top: 0, behavior: 'smooth' });
@@ -79,11 +78,19 @@ export default function AdminCourseEditor() {
     // Create the quiz, link it to this lesson, and persist immediately —
     // that way the link survives even if the admin never returns to click
     // the main Save button after editing the quiz.
-    const newQuiz = saveQuiz(createQuizTemplate({ lessonId: lesson.id, courseId: course.id }));
-    const updatedCourse = findAndUpdateLesson(course, lesson.id, { quizId: newQuiz.id });
-    setCourse(updatedCourse);
-    saveCourse(updatedCourse);
-    navigate(`/admin/quizzes/${newQuiz.id}`);
+    setSaving(true);
+    setNotice('');
+    try {
+      const newQuiz = await saveQuiz(createQuizTemplate({ lessonId: lesson.id, courseId: course.id }));
+      const updatedCourse = findAndUpdateLesson(course, lesson.id, { quizId: newQuiz.id });
+      const savedCourse = await saveCourse(updatedCourse);
+      setCourse(savedCourse);
+      navigate(`/admin/quizzes/${newQuiz.id}`);
+    } catch (error) {
+      setNotice(error.message || 'Could not create the quiz.');
+    } finally {
+      setSaving(false);
+    }
   }
 
   function validate() {
@@ -93,24 +100,36 @@ export default function AdminCourseEditor() {
     return null;
   }
 
-  function handleSave() {
+  async function handleSave() {
     const error = validate();
     if (error) {
       setNotice(error);
       window.scrollTo({ top: 0, behavior: 'smooth' });
       return;
     }
-    const saved = saveCourse(course);
-    setCourse(saved);
-    setNotice('Course saved.');
-    if (!isEditMode) {
-      navigate(`/admin/courses/${saved.id}/edit`, { replace: true });
+    setSaving(true);
+    try {
+      const saved = await saveCourse(course);
+      setCourse(saved);
+      setNotice('Course saved.');
+      if (!isEditMode) navigate(`/admin/courses/${saved.id}/edit`, { replace: true });
+    } catch (error) {
+      setNotice(error.message || 'Could not save the course.');
+    } finally {
+      setSaving(false);
     }
   }
 
-  function handleDeleteConfirmed() {
-    removeCourse(course.id);
-    navigate('/admin');
+  async function handleDeleteConfirmed() {
+    setSaving(true);
+    try {
+      await removeCourse(course.id);
+      navigate('/admin');
+    } catch (error) {
+      setConfirmDelete(false);
+      setNotice(error.message || 'Could not delete the course.');
+      setSaving(false);
+    }
   }
 
   return (
@@ -215,8 +234,8 @@ export default function AdminCourseEditor() {
           <button type="button" className="btn btn-ghost" onClick={() => navigate('/admin')}>
             Cancel
           </button>
-          <button type="button" className="btn btn-primary" onClick={handleSave}>
-            Save Course
+          <button type="button" className="btn btn-primary" onClick={handleSave} disabled={saving}>
+            {saving ? 'Saving…' : 'Save Course'}
           </button>
         </div>
       </div>

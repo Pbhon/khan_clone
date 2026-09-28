@@ -7,7 +7,7 @@ import { findNextIncompleteLesson } from '../utils/progressUtils';
 
 export default function StudentDashboard() {
   const { currentUser } = useAuth();
-  const { courses, progress, userAwards, awardsCatalog, newAwardNotice, clearAwardNotice } = useData();
+  const { courses, progress, userAwards, awardsCatalog, newAwardNotice, clearAwardNotice, dataLoading, dataError } = useData();
 
   const enrolledCourses = progress
     .map((p) => ({ progress: p, course: courses.find((c) => c.id === p.courseId) }))
@@ -46,7 +46,11 @@ export default function StudentDashboard() {
         </div>
       </div>
 
-      {enrolledCourses.length === 0 ? (
+      {dataError && <div className="alert alert-error">{dataError}</div>}
+
+      {dataLoading ? (
+        <div className="empty-state"><p>Loading your courses…</p></div>
+      ) : enrolledCourses.length === 0 ? (
         <div className="empty-state">
           <h3>You haven&rsquo;t enrolled in anything yet</h3>
           <p>Browse the catalog and pick a course to get started.</p>

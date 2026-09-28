@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { Link, Navigate, useParams } from 'react-router-dom';
 import { useData } from '../context/DataContext';
-import * as quizService from '../services/quizService';
+import { generateAttemptQuestions } from '../services/quizService';
 import { calculateScore } from '../utils/quizUtils';
 import { getAllLessons } from '../utils/progressUtils';
 
@@ -12,10 +12,12 @@ const MAX_ATTEMPTS_PER_QUESTION = 2;
 
 export default function QuizPage() {
   const { courseId, lessonId } = useParams();
-  const { courses, submitQuizAttempt } = useData();
+  const { courses, dataLoading, getQuizById, submitQuizAttempt } = useData();
   const course = courses.find((c) => c.id === courseId);
   const lesson = course ? getAllLessons(course).find((l) => l.id === lessonId) : null;
-  const quiz = lesson?.quizId ? quizService.getQuizById(lesson.quizId) : null;
+  const [quiz, setQuiz] = useState(null);
+  const [quizLoading, setQuizLoading] = useState(true);
+  const [error, setError] = useState('');
 
   const [questions, setQuestions] = useState([]);
   const [currentIndex, setCurrentIndex] = useState(0);
@@ -28,15 +30,36 @@ export default function QuizPage() {
   const [finalScore, setFinalScore] = useState(null);
 
   useEffect(() => {
-    startAttempt();
-    // Only re-sample when we're looking at a genuinely different quiz —
-    // startAttempt itself is intentionally left out of the deps array.
+    let cancelled = false;
+    if (!lesson?.quizId) {
+      setQuizLoading(false);
+      return undefined;
+    }
+    setQuizLoading(true);
+    getQuizById(lesson.quizId)
+      .then((loadedQuiz) => {
+        if (!cancelled) setQuiz(loadedQuiz);
+      })
+      .catch((loadError) => {
+        if (!cancelled) setError(loadError.message || 'Could not load this quiz.');
+      })
+      .finally(() => {
+        if (!cancelled) setQuizLoading(false);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [getQuizById, lesson?.quizId]);
+
+  useEffect(() => {
+    if (quiz) startAttempt();
+    // A new quiz should always start with a fresh sample.
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [quiz?.id]);
 
   function startAttempt() {
     if (!quiz) return;
-    setQuestions(quizService.generateAttemptQuestions(quiz));
+    setQuestions(generateAttemptQuestions(quiz));
     setCurrentIndex(0);
     setSelectedChoice(null);
     setAttemptsOnCurrent(0);
@@ -45,6 +68,10 @@ export default function QuizPage() {
     setResults([]);
     setFinalScore(null);
     setPhase('active');
+  }
+
+  if (dataLoading || quizLoading) {
+    return <div className="page container-narrow"><p className="text-muted">Loading quiz…</p></div>;
   }
 
   if (!course || !lesson || !quiz) {
@@ -101,7 +128,7 @@ export default function QuizPage() {
     }
   }
 
-  function handleNext() {
+  async function handleNext() {
     if (currentIndex + 1 < questions.length) {
       setCurrentIndex((i) => i + 1);
       setSelectedChoice(null);
@@ -109,21 +136,28 @@ export default function QuizPage() {
       setResolved(false);
       setWasCorrect(null);
     } else {
-      finishQuiz();
+      await finishQuiz();
     }
   }
 
-  function finishQuiz() {
+  async function finishQuiz() {
     const score = calculateScore(results);
     const passed = score.percent >= (quiz.passingScorePercent ?? 70);
-    setFinalScore({ ...score, passed });
-    submitQuizAttempt(courseId, quiz.id, lesson.id, {
-      correct: score.correct,
-      total: score.total,
-      percent: score.percent,
-      passed,
-    });
-    setPhase('finished');
+    setError('');
+    setPhase('saving');
+    try {
+      await submitQuizAttempt(courseId, quiz.id, lesson.id, {
+        correct: score.correct,
+        total: score.total,
+        percent: score.percent,
+        passed,
+      });
+      setFinalScore({ ...score, passed });
+      setPhase('finished');
+    } catch (saveError) {
+      setError(saveError.message || 'Could not save your quiz result.');
+      setPhase('active');
+    }
   }
 
   if (phase === 'finished' && finalScore) {
@@ -158,6 +192,7 @@ export default function QuizPage() {
 
   return (
     <div className="page container-narrow">
+      {error && <div className="alert alert-error">{error}</div>}
       <div className="quiz-progress">
         Question {currentIndex + 1} of {questions.length}
       </div>
@@ -210,8 +245,8 @@ export default function QuizPage() {
               Submit Answer
             </button>
           ) : (
-            <button type="button" className="btn btn-primary" onClick={handleNext}>
-              {currentIndex + 1 < questions.length ? 'Next Question' : 'See Results'}
+            <button type="button" className="btn btn-primary" onClick={handleNext} disabled={phase === 'saving'}>
+              {phase === 'saving' ? 'Saving…' : currentIndex + 1 < questions.length ? 'Next Question' : 'See Results'}
             </button>
           )}
         </div>

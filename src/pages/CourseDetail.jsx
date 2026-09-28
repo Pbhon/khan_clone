@@ -4,8 +4,12 @@ import ProgressBar from '../components/ProgressBar';
 
 export default function CourseDetail() {
   const { courseId } = useParams();
-  const { courses, getCourseProgress, enroll } = useData();
+  const { courses, dataLoading, getCourseProgress, enroll } = useData();
   const course = courses.find((c) => c.id === courseId);
+
+  if (dataLoading) {
+    return <div className="page container-narrow"><p className="text-muted">Loading course…</p></div>;
+  }
 
   if (!course) {
     return <Navigate to="/courses" replace />;
@@ -13,6 +17,10 @@ export default function CourseDetail() {
 
   const progress = getCourseProgress(courseId);
   const isEnrolled = Boolean(progress);
+
+  async function handleEnroll() {
+    await enroll(courseId);
+  }
 
   return (
     <div className="page">
@@ -34,7 +42,7 @@ export default function CourseDetail() {
       ) : (
         <div className="card course-progress-summary flex-between">
           <p className="text-muted">Enroll to start tracking your progress through this course.</p>
-          <button type="button" className="btn btn-primary" onClick={() => enroll(courseId)}>
+          <button type="button" className="btn btn-primary" onClick={handleEnroll}>
             Enroll
           </button>
         </div>

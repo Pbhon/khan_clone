@@ -1,23 +1,23 @@
+import { lazy, Suspense } from 'react';
 import { Route, Routes } from 'react-router-dom';
 import { AuthProvider } from './context/AuthContext';
 import { DataProvider } from './context/DataContext';
 import ProtectedRoute from './components/ProtectedRoute';
 import Navbar from './components/Navbar';
 
-import LandingPage from './pages/LandingPage';
-import LoginPage from './pages/LoginPage';
-import SignupPage from './pages/SignupPage';
-import StudentDashboard from './pages/StudentDashboard';
-import CourseCatalog from './pages/CourseCatalog';
-import CourseDetail from './pages/CourseDetail';
-import LessonView from './pages/LessonView';
-import QuizPage from './pages/QuizPage';
-import AwardsPage from './pages/AwardsPage';
-import NotFound from './pages/NotFound';
-
-import AdminDashboard from './pages/admin/AdminDashboard';
-import AdminCourseEditor from './pages/admin/AdminCourseEditor';
-import AdminQuizEditor from './pages/admin/AdminQuizEditor';
+const LandingPage = lazy(() => import('./pages/LandingPage'));
+const LoginPage = lazy(() => import('./pages/LoginPage'));
+const SignupPage = lazy(() => import('./pages/SignupPage'));
+const StudentDashboard = lazy(() => import('./pages/StudentDashboard'));
+const CourseCatalog = lazy(() => import('./pages/CourseCatalog'));
+const CourseDetail = lazy(() => import('./pages/CourseDetail'));
+const LessonView = lazy(() => import('./pages/LessonView'));
+const QuizPage = lazy(() => import('./pages/QuizPage'));
+const AwardsPage = lazy(() => import('./pages/AwardsPage'));
+const NotFound = lazy(() => import('./pages/NotFound'));
+const AdminDashboard = lazy(() => import('./pages/admin/AdminDashboard'));
+const AdminCourseEditor = lazy(() => import('./pages/admin/AdminCourseEditor'));
+const AdminQuizEditor = lazy(() => import('./pages/admin/AdminQuizEditor'));
 
 export default function App() {
   return (
@@ -26,6 +26,7 @@ export default function App() {
         <div className="app-shell">
           <Navbar />
           <main className="app-main">
+            <Suspense fallback={<div className="page"><p className="text-muted">Loading…</p></div>}>
             <Routes>
               <Route path="/" element={<LandingPage />} />
               <Route path="/login" element={<LoginPage />} />
@@ -115,6 +116,7 @@ export default function App() {
 
               <Route path="*" element={<NotFound />} />
             </Routes>
+            </Suspense>
           </main>
         </div>
       </DataProvider>
