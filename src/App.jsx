@@ -1,5 +1,6 @@
 import { lazy, Suspense } from 'react';
 import { Route, Routes } from 'react-router-dom';
+import { Analytics } from '@vercel/analytics/react';
 import { AuthProvider } from './context/AuthContext';
 import { DataProvider } from './context/DataContext';
 import ProtectedRoute from './components/ProtectedRoute';
@@ -119,6 +120,7 @@ export default function App() {
             </Suspense>
           </main>
         </div>
+        <Analytics />
       </DataProvider>
     </AuthProvider>
   );
